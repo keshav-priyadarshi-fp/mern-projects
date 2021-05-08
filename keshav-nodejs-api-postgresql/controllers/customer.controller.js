@@ -1,70 +1,92 @@
-const express = require("express");
-const router = express.Router();
-
-const db = require("../models/db")
+const Customer = require("../models/customer.model")
 
 
-//get all the customers from the database
-router.get("/",(req, res) => {
-    db.query('SELECT * FROM customers',(err,data) => {
-        if(err) throw err
-        res.send(data.rows)
+module.exports = {
+
+  getAllCustomer: (req, res) => {
+    Customer.getAll((err, data) => {
+      if (err)
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while retrieving customers."
+        });
+      else res.send(data.rows);
+    });
+  },
+
+  getCustomerById: (req, res) => {
+    Customer.getById(req.params.id, (err, data) => {
+      if (err) {
+        if (err.kind === "not_found") {
+          res.status(404).send({
+            message: `Not found Customer with id ${req.params.customerId}.`
+          });
+        } else {
+          res.status(500).send({
+            message: "Error retrieving Customer with id " + req.params.customerId
+          });
+        }
+      }
+
+      else {
+        res.send(data.rows[0])
+      }
     })
-})
+  },
 
+  addCustomer: (req, res) => {
+    if (!req.body) {
+      res.status(400).send({
+        message: "Content can not be empty!"
+      });
+    }
 
+    // Save Customer in the database
+    Customer.create(req.body, (err, data) => {
+      if (err)
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the Customer."
+        });
+      else res.send(data);
+    });
+  },
 
-//get all the customers with respect to id from the database
-router.get("/:id",(req, res) => {
+  updateCustomer: (req, res) => {
+    const { email, name, active } = req.body
     const id = req.params.id
-    db.query(`SELECT * FROM customers where id=${id}`,(err,data) => {
-        if(err) throw err
-        if(data.rows.length === 0) return res.send("No customers found with the given id")
-        res.send(data.rows)
+
+    Customer.updateById(email, name, active, id, (err, data) => {
+      if (err) {
+        return res.status(500).send("Something went wrong")
+      }
+      else {
+        res.send(data);
+      }
     })
-})
+  },
 
-
-
-//add new customer 
-router.post("/add",(req, res) => {
-    const {email,name,active} = req.body
-    db.query('Insert into customers (email,name,active) values ($1,$2,$3)',[email,name,active],(err,data) => {
-        if(err) throw err
-        res.send("customer added successfully")
-    })
-})  
-
-
-//update the existing customer with respect to id
-router.put("/update/:id",(req, res) => {
-    const {email,name,active} = req.body
+  deleteCustomer: (req, res) => {
     const id = req.params.id
-    db.query(`UPDATE customers SET email = $1, name=$2, active=$3 where id=${id}`,[email,name,active],(err,data) => {
-        if(err) throw err
-        res.send("customer updated successfully")    
+    Customer.delete(id, (err, data) => {
+      if (err) {
+        return res.status(500).send("Something went wrong")
+      }
+      else {
+        res.send(data);
+      }
     })
-})
+  },
 
-
-//delete customer with respect to id from the database
-router.delete("/delete/:id", (req, res) => {
-    const id = req.params.id
-    db.query(`DELETE FROM customers where id=${id}`,(err,data)=>{
-        if(err) throw err
-        res.send(`customer with id ${id} is deleted`)
+  deleteAllCustomers: (req, res) => {
+    Customer.deleteAll((err, data) => {
+      if (err) {
+        return res.status(500).send("Something went wrong")
+      }
+      else {
+        res.send(data);
+      }
     })
-})
-
-
-
-//delete all the customers from the database
-router.delete("/delete_all", (req, res) => {
- 
-    db.query(`DELETE FROM customers`,(err,data)=>{
-        if(err) throw err
-        res.send(`all customers are deleted`)
-    })
-})
-
-module.exports = router;
+  }
+  
+}

@@ -4,7 +4,7 @@ const pg = require("pg").Pool
 
 const dbpg = new pg({
     host:private_data.host,
-    port:private_data.port,
+    port:private_data.database_port,
     user:private_data.user,
     password:private_data.password,
     database:private_data.database,

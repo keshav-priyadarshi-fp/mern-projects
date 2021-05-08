@@ -1,19 +1,18 @@
 const express = require('express')
-const bodyParser = require('body-parser')
 const app = express()
 
-const port = 2400
+const port = process.env.PORT || 2400
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(express.json())
 
-const customers = require("./controllers/customer.controller")
-app.use("/customers",customers)
+const route = require("./routes/customer.route")
+app.use("/customers", route)
+
 
 app.get("/", (req, res) =>
     res.json({message:"Welcome to the customer management API"})  
 )
-
+ 
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`)
-}) 
+})
